@@ -89,8 +89,18 @@ sentinel-ai/
 
 ## 👥 4-Person Hackathon Team Division
 
-To prevent Git merge conflicts during rapid development:
-- **Member 1 (Frontend)**: Playground UI, logs dashboard, and policy toggles in `frontend/`.
-- **Member 2 (API & Platform)**: FastAPI setup, routing, schemas, and privacy-preserving storage in `backend/app/api/` and `storage.py`.
-- **Member 3 (Detection & Injection)**: PII/Secret regex patterns and prompt injection heuristics in `backend/app/engine/detector.py` and `injection.py`.
-- **Member 4 (Policy, Permissions & LLM)**: Access control checks, masking logic, and LLM orchestration in `backend/app/engine/` and `mock_llm.py`.
+Member 1 — Backend & Security Engine
+
+Owns the existing FastAPI backend, security detection, data masking, policy enforcement, permissions, audit logging, and backend testing.
+
+Member 2 — Frontend & UI/UX
+
+Builds the React + Vite + TypeScript frontend, including the cybersecurity dashboard, Attack Lab, Knowledge Vault, Policy Center, and integration with backend APIs.
+
+Member 3 — Groq AI Integration
+
+Integrates Groq-powered AI analysis, manages provider configuration securely, handles API errors, and preserves deterministic security controls and mock mode.
+
+Member 4 — Investigation Engine & Attack Lab
+
+Builds synthetic attack scenarios, incident investigation, evidence timelines, counterfactual replay, and security benchmarking with measurable results.
