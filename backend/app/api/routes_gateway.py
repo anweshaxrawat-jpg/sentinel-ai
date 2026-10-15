@@ -53,10 +53,23 @@ def scan_and_process_prompt(request: ScanRequest):
     # 6. Call Mock LLM only if allowed or masked
     llm_output = None
     if action in [GatewayAction.ALLOW, GatewayAction.MASK]:
-        llm_output = mock_llm_service.generate_response(sanitized_prompt)
+        raw_llm_output = mock_llm_service.generate_response(sanitized_prompt)
+        if raw_llm_output:
+            # Output Data-Loss Prevention: Scan model response for sensitive data and mask
+            output_entities = detect_entities(raw_llm_output)
+            llm_output = mask_text(raw_llm_output, output_entities)
 
     # 7. Safe audit log (Zero raw sensitive data stored!)
-    safe_preview = generate_sanitized_preview(sanitized_prompt)
+    if action == GatewayAction.BLOCK:
+        if is_injection:
+            safe_preview = generate_sanitized_preview("", is_blocked=True, blocked_category="PROMPT_INJECTION")
+        elif not perm_granted:
+            safe_preview = generate_sanitized_preview("", is_blocked=True, blocked_category="UNAUTHORIZED_ACCESS")
+        else:
+            safe_preview = generate_sanitized_preview("", is_blocked=True, blocked_category="SENSITIVE_CREDENTIALS")
+    else:
+        safe_preview = generate_sanitized_preview(sanitized_prompt)
+
     detected_types = [e.entity_type for e in detected_entities]
     if is_injection:
         detected_types.append("PROMPT_INJECTION")

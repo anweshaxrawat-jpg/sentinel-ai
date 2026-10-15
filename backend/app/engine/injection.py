@@ -2,15 +2,37 @@ import re
 from typing import Tuple
 
 # Common prompt injection, jailbreak, and system override patterns
+# Deterministic heuristic patterns for prompt injection, jailbreaks, and system overrides
 INJECTION_PATTERNS = [
-    re.compile(r"(?i)\bignore\s+(?:all\s+)?(?:previous|prior|above)\s+instructions\b"),
-    re.compile(r"(?i)\bdisregard\s+(?:all\s+)?(?:previous|prior|system)\s+rules\b"),
-    re.compile(r"(?i)\byou\s+are\s+now\s+(?:DAN|unfiltered|jailbroken|unrestricted)\b"),
-    re.compile(r"(?i)\bpretend\s+you\s+have\s+no\s+(?:safety|ethics|rules|restrictions)\b"),
-    re.compile(r"(?i)\brepeat\s+(?:the\s+)?(?:system\s+prompt|initial\s+prompt|instructions\s+above)\b"),
-    re.compile(r"(?i)\breveal\s+(?:your\s+)?(?:system\s+prompt|developer\s+mode|internal\s+instructions)\b"),
-    re.compile(r"(?i)\benter\s+(?:DAN\s+mode|developer\s+mode)\b"),
-    re.compile(r"(?i)\bbypass\s+(?:all\s+)?(?:content\s+filters|security\s+checks)\b"),
+    # Instruction & rule override variations (ignore the previous, forget all prior, disregard guidance)
+    re.compile(
+        r"(?i)\b(?:ignore|disregard|forget|override|drop|cancel|reset)\s+"
+        r"(?:all\s+|the\s+|any\s+|every\s+|your\s+|system\s+)*"
+        r"(?:previous|prior|above|earlier|system|existing|initial)?\s*"
+        r"(?:instructions|rules|guidelines|guidance|directions|prompts|commands|constraints)\b"
+    ),
+    # Persona & jailbreak variations (DAN, unfiltered, no rules)
+    re.compile(
+        r"(?i)\b(?:you\s+are\s+now|act\s+as|pretend\s+to\s+be)\s+"
+        r"(?:an?\s+)?(?:DAN|unfiltered|jailbroken|unrestricted|evil\s+ai)\b"
+    ),
+    re.compile(
+        r"(?i)\bpretend\s+(?:you\s+have|there\s+are)\s+no\s+"
+        r"(?:safety|ethics|rules|restrictions|limits|guidelines)\b"
+    ),
+    re.compile(r"(?i)\benter\s+(?:DAN(?:\s+mode)?|developer\s+mode|jailbreak\s+mode)\b"),
+    # Filter bypass variations (bypass the security rules, disable filters)
+    re.compile(
+        r"(?i)\b(?:bypass|disable|circumvent|ignore)\s+"
+        r"(?:all\s+|the\s+|any\s+)*"
+        r"(?:content\s+|safety\s+|security\s+)*"
+        r"(?:filters|checks|rules|safeguards|restrictions|guidelines)\b"
+    ),
+    # System prompt exfiltration
+    re.compile(
+        r"(?i)\b(?:repeat|reveal|print|show|output|leak)\s+"
+        r"(?:the\s+|your\s+)?(?:system\s+prompt|initial\s+prompt|hidden\s+prompt|instructions\s+above|developer\s+instructions)\b"
+    ),
 ]
 
 
@@ -18,10 +40,12 @@ def detect_prompt_injection(prompt: str) -> Tuple[bool, str]:
     """
     Checks if the prompt contains known prompt injection or jailbreak patterns.
     Returns a tuple of (is_injection, reason).
+    Note: Deterministic heuristics provide defense-in-depth but do not guarantee catching every attack.
     """
     for pattern in INJECTION_PATTERNS:
         match = pattern.search(prompt)
         if match:
-            return True, f"Detected potential prompt injection attempt: '{match.group(0)}'"
+            # Generic message without reflecting matched attacker input
+            return True, "Detected potential prompt injection or policy override."
 
     return False, ""

@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes_gateway import router as gateway_router
@@ -24,6 +26,28 @@ app.add_middleware(
 app.include_router(gateway_router, prefix=settings.API_PREFIX)
 app.include_router(logs_router, prefix=settings.API_PREFIX)
 app.include_router(rules_router, prefix=settings.API_PREFIX)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Prevents reflection of raw payloads or sensitive parameters on schema validation errors.
+    """
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Request validation failed. Please check field formats."},
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Prevents leakage of internal stack traces, system paths, or secret values on unhandled errors.
+    """
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred while processing the security gateway request."},
+    )
 
 
 @app.get("/")

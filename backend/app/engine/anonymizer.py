@@ -29,12 +29,22 @@ def mask_text(text: str, entities: List[DetectedEntity]) -> str:
     return result
 
 
-def generate_sanitized_preview(text: str, max_length: int = 60) -> str:
+def generate_sanitized_preview(
+    text: str,
+    max_length: int = 60,
+    is_blocked: bool = False,
+    blocked_category: str = None,
+) -> str:
     """
-    Generates a safe preview string from an already masked prompt.
-    Truncates to max_length and adds an ellipsis if needed.
-    NEVER call this on unmasked/raw prompts.
+    Generates a safe preview string for audit logging.
+    - If the request was BLOCKED (e.g. injection, permissions, credentials),
+      strictly returns a generic non-sensitive preview tag, NEVER raw text.
+    - For allowed or masked requests, safely truncates the already masked text.
     """
+    if is_blocked:
+        category = (blocked_category or "SECURITY_VIOLATION").strip().upper()
+        return f"[BLOCKED: {category}]"
+
     preview = text.strip().replace("\n", " ")
     if len(preview) > max_length:
         return preview[:max_length] + "..."

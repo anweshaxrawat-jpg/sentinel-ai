@@ -23,13 +23,18 @@ class InMemoryStorage:
         user_role: str,
         blocked_reason: str = None,
     ) -> AuditLogEntry:
+        # Privacy guarantee: blocked requests must strictly use generic placeholder previews
+        safe_preview = sanitized_preview
+        if action == GatewayAction.BLOCK and not (safe_preview.startswith("[BLOCKED") or "[REDACTED_" in safe_preview):
+            safe_preview = "[BLOCKED: SECURITY_POLICY]"
+
         entry = AuditLogEntry(
             id=str(uuid.uuid4())[:8],
             timestamp=datetime.now(timezone.utc),
             action=action,
             risk_score=risk_score,
             detected_types=detected_types,
-            sanitized_preview=sanitized_preview,
+            sanitized_preview=safe_preview,
             user_role=user_role,
             blocked_reason=blocked_reason,
         )

@@ -34,11 +34,10 @@ def evaluate_policy(
     )
 
     if config.block_on_secrets and has_critical_secrets:
-        secret_types = [e.label for e in entities if e.severity in [EntitySeverity.HIGH, EntitySeverity.CRITICAL]]
         return (
             GatewayAction.BLOCK,
             0.9,
-            f"Blocked due to exposure of sensitive secrets/credentials: {', '.join(set(secret_types))}",
+            "Blocked due to exposure of sensitive secrets or credentials.",
         )
 
     # 4. Check for PII (Email, Phone, etc.)
